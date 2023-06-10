@@ -19,13 +19,16 @@ contract NFT is ERC721 {
     mapping( uint => mapping( uint => uint ) ) public chk_seat ;
     // chk[ 230604(날짜)1(프리미엄석)101(블럭)303(몇번째 ) ] = 0 : 발행x , 1 : 발행o , 2 : 사용됨
 
-    mapping( uint => address ) ticket_user ;
+    mapping( uint => address ) ticket_owner ; // 좌석의 주인 없으면 0
 
     function burn( uint _day , uint _type ) public { // 환불
          
         // 사용 후에 보냄. 
         // 1번 경기의 좌석이 20개 , 맵핑으로 민팅할때 좌석값까지
         chk_seat[ _day ][ _type ] = 0 ;
+        uint _tokenID = plus( _day , _type ) ;
+        ticket_owner[ _tokenID ] = 0 ;
+
          
     }
 
@@ -51,7 +54,7 @@ contract NFT is ERC721 {
 
         uint _tokenID = plus( _day , _type ) ;
         chk_seat[ _day ][ _type ] = 1 ;
-        ticket_user[ _tokenID ] = msg.sender ;
+        ticket_owner[ _tokenID ] = msg.sender ;
 
     }
 
@@ -88,12 +91,7 @@ contract bonus_token is ERC20 , ERC20Burnable {
 
         owner = msg.sender ;
 
-    }
-
-    event A
-    
-    emit A
-    
+    }    
 
     // OVERRIDE & REDEFINED FUNCTIONS
     function decimals() override public pure returns( uint8 ){
