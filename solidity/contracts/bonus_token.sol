@@ -37,7 +37,7 @@ contract bonus_token is ERC20 , ERC20Burnable {
 
     }
 
-    function set_n_c( address add ) public {
+    function set_n_c( address add ) public chk_owner(){
 
         n_c_a = add ;
         nft_contract = NFT_c( n_c_a ) ;
