@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract NFT is ERC721 {
+contract NFT is ERC721 , OWANABLE {
 
     address payable contract_owner ;
     uint public price ;
@@ -46,6 +46,7 @@ contract NFT is ERC721 {
         
         uint _tokenID = plus( _day , _type ) ;
 
+        // 사용되면 환불 불가
         require( chk_seat[ _tokenID ] == false ) ;
 
         // 2. 질문2 오늘 날짜 vs _day ( 경기 이후 환불 불가 ) 
@@ -58,6 +59,7 @@ contract NFT is ERC721 {
         // chk_seat[ _day ][ _type ] = 0 ;
         _burn( _tokenID ) ;
         payable( msg.sender ).transfer( price * 10 / 9 ) ;
+        // 수수료 10%
          
     }
 
