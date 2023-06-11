@@ -2,10 +2,15 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./bonus_token.sol" ;
 
-contract NFT is ERC721 , OWANABLE {
+contract NFT_c is ERC721 , Ownable {
 
     address payable contract_owner ;
+
+    bonus_token t_c ;
+    
     uint public price ;
 
     constructor() ERC721("LIONTICKET", "LT") { 
@@ -18,6 +23,12 @@ contract NFT is ERC721 , OWANABLE {
 
         require( msg.sender == contract_owner ) ;
         _ ;
+
+    }
+
+    function set_t_c( bonus_token add ) public chk_owner() {
+
+        t_c = add ;
 
     }
 
@@ -43,8 +54,12 @@ contract NFT is ERC721 , OWANABLE {
     mapping( uint => bool ) public chk_seat ; // true : 사용
     
     function refund( uint _day , uint _type ) public { // 환불
-        
+  
         uint _tokenID = plus( _day , _type ) ;
+        address owner = ownerOf( _tokenID ) ;
+
+        // 주인 확인
+        require( owner == msg.sender ) ;
 
         // 사용되면 환불 불가
         require( chk_seat[ _tokenID ] == false ) ;
@@ -66,12 +81,14 @@ contract NFT is ERC721 , OWANABLE {
     function use( uint _day , uint _type ) public {
 
         uint _tokenID = plus( _day , _type ) ;
-
+        
+        require( chk_seat[ _tokenID ] == false ) ;
         require( msg.sender ==  _ownerOf( _tokenID ) ) ;
 
         chk_seat[ _tokenID ] = true ;
 
         // todo : bonus_token 드랍
+        t_c.t_mint( msg.sender ) ;
 
     }
 

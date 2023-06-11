@@ -1,0 +1,14 @@
+
+
+internal
+
+external
+
+public - 제한없음
+
+private -
+
+이 4개 일단 구분 확실하게 해야함
+필요없음
+
+일단 컨트롤 타워 안만들기로
