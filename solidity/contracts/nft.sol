@@ -8,11 +8,13 @@ contract NFT is ERC721 {
     address payable contract_owner ;
     uint public price ;
 
-    constructor() ERC721("LIONTICKET", "LT") {
+    constructor() ERC721("LIONTICKET", "LT") { 
         contract_owner = payable( msg.sender ) ;
     }
 
     modifier chk_owner() {
+
+        // ownable뜯어보고 업데이트 예정
 
         require( msg.sender == contract_owner ) ;
         _ ;
