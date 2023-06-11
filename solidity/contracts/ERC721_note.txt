@@ -1,0 +1,23 @@
+
+_safeMint > _mint
+
+_mint( to , tokenID )
+
+_balance[ to ] ++ ;
+_owners[ tokenID ] = to ;
+
+
+burn( tokenID )
+
+owner = ownerOf(tokenId);
+민팅이 안된 nft면 ( owner == address( 0 ) ) 함수에서 require
+
+delete
+tokenapply[ tokenID ] // 우리 코드에서는 안쓸 개념 ( 중고거래가 없다 ) 
+_owners[ tokenID ]
+
+
+_exists( tokenID )  동일 tokenID 안되게 하는 코드
+동일 tokenID 가 무조건 안되는게 아니라
+그냥 주인있으면 민팅 방지라
+번 후에는 다시 민팅 가능

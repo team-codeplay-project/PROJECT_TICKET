@@ -2,59 +2,85 @@
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 contract NFT is ERC721 {
 
-    address owner ;
+    address payable contract_owner ;
+    uint public price ;
 
     constructor() ERC721("LIONTICKET", "LT") {
+        contract_owner = payable( msg.sender ) ;
+    }
 
-        owner = msg.sender ;
+    modifier chk_owner() {
+
+        require( msg.sender == contract_owner ) ;
+        _ ;
 
     }
 
-    mapping( uint => mapping( uint => uint ) ) public chk_seat ;
+    function withdraw( uint _amount ) public chk_owner() { // 원하는 만큼만 출금
+
+        // todo_ 이미 지난 경기들의 가격만 출금가능. 안끝난 경기는 환불이슈 있음.
+
+        contract_owner.transfer( _amount ) ;
+
+    }
+
+    function set_price( uint _price ) public chk_owner() { // 가격 정하기
+
+        // 질문1 _price 에 1 ether 이렇게 넣어도 되나?
+        price = _price ;
+
+    }
+
+    // 필요 없을 수도 있다. 721 기본 코드에서 알아서 다 해줌.
+    // 사용 여부 구분할때는 필요할거같은디?
+    // mapping( uint => mapping( uint => uint ) ) public chk_seat ;
     // chk[ 230604(날짜)1(프리미엄석)101(블럭)303(몇번째 ) ] = 0 : 발행x , 1 : 발행o , 2 : 사용됨
+    mapping( uint => bool ) public chk_seat ; // true : 사용
+    
+    function refund( uint _day , uint _type ) public { // 환불
+        
+        uint _tokenID = plus( _day , _type ) ;
 
-    mapping( uint => address ) ticket_owner ; // 좌석의 주인 없으면 0
+        require( chk_seat[ _tokenID ] == false ) ;
 
-    function burn( uint _day , uint _type ) public { // 환불
-         
+        // 2. 질문2 오늘 날짜 vs _day ( 경기 이후 환불 불가 ) 
+
+        
+
+
         // 사용 후에 보냄. 
         // 1번 경기의 좌석이 20개 , 맵핑으로 민팅할때 좌석값까지
-        chk_seat[ _day ][ _type ] = 0 ;
-        uint _tokenID = plus( _day , _type ) ;
-        ticket_owner[ _tokenID ] = 0 ;
-
+        // chk_seat[ _day ][ _type ] = 0 ;
+        _burn( _tokenID ) ;
+        payable( msg.sender ).transfer( price * 10 / 9 ) ;
          
-    }
-
-    function chk( uint _day , uint _type ) public view returns( uint ) {
-
-        return chk_seat[ _day ][ _type ] ;
-
     }
 
     function use( uint _day , uint _type ) public {
 
         uint _tokenID = plus( _day , _type ) ;
-        _mint( msg.sender , _tokenID ) ;
-        chk_seat[ _day ][ _type ] = 2 ;
+
+        require( msg.sender ==  _ownerOf( _tokenID ) ) ;
+
+        chk_seat[ _tokenID ] = true ;
+
+        // todo : bonus_token 드랍
 
     }
 
-    function mintNFT( uint _day , uint _type ) public { // 민팅 후 좌석 정보 변경 
+    function mintNFT( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
 
-        // require( msg.value == 1 ether ) ;
-        // 프론트에서 호출했을때는 어떻게 진행됨??
+        // 가격
+        require( msg.value == 1 ether ) ;
         // 이더말고 스테이블은 어떻게 받음??
+        // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
+        // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
 
         uint _tokenID = plus( _day , _type ) ;
-        chk_seat[ _day ][ _type ] = 1 ;
-        ticket_owner[ _tokenID ] = msg.sender ;
+        _safeMint( msg.sender , _tokenID ) ;
 
     }
 
@@ -71,77 +97,6 @@ contract NFT is ERC721 {
 
         }
         
-    }
-
-}
-
-contract bonus_token is ERC20 , ERC20Burnable {
-
-    // 질문 1 ERC20 의 근본적인... 건 좀 공부 더하고
-
-    address owner ;
-    
-    mapping( uint => uint ) R_BAL ; // 래플 밸런스
-    mapping( uint => bool ) R_END ; // 래플 종료
-    mapping( uint => address ) A_ADD ; // 옥션 최고 지값, 밸류
-    mapping( uint => uint ) A_BAL ;
-    mapping( uint => bool ) A_END ; // 옥션 종료
-
-    constructor () ERC20("AToken", "AT") {
-
-        owner = msg.sender ;
-
-    }    
-
-    // OVERRIDE & REDEFINED FUNCTIONS
-    function decimals() override public pure returns( uint8 ){
-        return 0 ;
-    }
-
-    modifier chk_owner() {
-
-        require( msg.sender == owner ) ;
-        _ ;
-
-    }
-
-    function mint( address _to ) public chk_owner { // 사용 확인되면 토큰 1개 지급
-        _mint( _to , 1 ) ;
-    }
-
-    function RAPPLE( address _from , uint _idx ) public {
-
-        require( R_END[ _idx ] == false ) ;
-
-        _transfer( _from , address( this ) , 1 ) ; // 토큰 1개 수거
-        R_BAL[ _idx ] ++ ;
-
-    }
-
-    function RAPPLE_END( address _to , uint _idx ) public chk_owner {
-
-        // _to 는 js에서 랜덤 돌려서 당첨자 뽑기.
-        require( R_END[ _idx ] == false ) ;
-        _transfer( address( this ) , _to , R_BAL[ _idx ] ) ;
-        R_END[ _idx ] = true ;
-
-    }
-
-    function Auction( address _from , uint _idx ) public {
-
-        require( A_END[ _idx ] == false ) ;
-
-        _transfer( _from , address( this ) , 1 ) ; // 토큰 1개 수거
-        A_BAL[ _idx ] ++ ;
-
-    }
-
-    function Auction_END( uint _idx ) public chk_owner {
-
-        require( A_END[ _idx ] == false ) ;
-
-    
-
     }
 
 }
