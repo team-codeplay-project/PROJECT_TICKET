@@ -1,0 +1,11 @@
+
+
+internal
+
+external
+
+public - 제한없음
+
+private -
+
+이 4개 일단 구분 확실하게
