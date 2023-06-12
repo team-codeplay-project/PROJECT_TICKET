@@ -6,9 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./nft.sol" ;
 
-contract bonus_token is ERC20 , ERC20Burnable {
+contract bonus_token is ERC20 , ERC20Burnable , Ownable {
 
-    address owner ;
     NFT_c nft_contract ;
     address n_c_a ;
      
@@ -20,9 +19,6 @@ contract bonus_token is ERC20 , ERC20Burnable {
     // 옥션 미구현
 
     constructor () ERC20("AToken", "AT") {
-
-        owner = msg.sender ;
-
     }    
 
     // OVERRIDE & REDEFINED FUNCTIONS
@@ -30,14 +26,7 @@ contract bonus_token is ERC20 , ERC20Burnable {
         return 0 ;
     }
 
-    modifier chk_owner() {
-
-        require( msg.sender == owner ) ;
-        _ ;
-
-    }
-
-    function set_n_c( address add ) public chk_owner(){
+    function set_n_c( address add ) public onlyOwner(){
 
         n_c_a = add ;
         nft_contract = NFT_c( n_c_a ) ;
@@ -58,7 +47,7 @@ contract bonus_token is ERC20 , ERC20Burnable {
 
     }
 
-    function RAPPLE_END( address _to , uint _idx ) public chk_owner {
+    function RAPPLE_END( address _to , uint _idx ) public onlyOwner() {
 
         // _to 는 js에서 랜덤 돌려서 당첨자 뽑기.
         require( R_END[ _idx ] == false ) ;

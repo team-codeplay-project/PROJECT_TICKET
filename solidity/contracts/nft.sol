@@ -10,39 +10,29 @@ contract NFT_c is ERC721 , Ownable {
     address payable contract_owner ;
 
     bonus_token t_c ;
-    
     uint public price ;
 
-    constructor() ERC721("LIONTICKET", "LT") { 
+    constructor() ERC721("LIONTICKET", "LT") {
+
         contract_owner = payable( msg.sender ) ;
-    }
-
-    modifier chk_owner() {
-
-        // ownable뜯어보고 업데이트 예정
-
-        require( msg.sender == contract_owner ) ;
-        _ ;
 
     }
 
-    function set_t_c( bonus_token add ) public chk_owner() {
+    function set_t_c( bonus_token add ) public onlyOwner() {
 
         t_c = add ;
 
     }
 
-    function withdraw( uint _amount ) public chk_owner() { // 원하는 만큼만 출금
+    function withdraw( uint _amount ) public onlyOwner { // 원하는 만큼만 출금
 
         // todo_ 이미 지난 경기들의 가격만 출금가능. 안끝난 경기는 환불이슈 있음.
-
         contract_owner.transfer( _amount ) ;
 
     }
 
-    function set_price( uint _price ) public chk_owner() { // 가격 정하기
+    function set_price( uint _price ) public onlyOwner { // 가격 정하기
 
-        // 질문1 _price 에 1 ether 이렇게 넣어도 되나?
         price = _price ;
 
     }
@@ -95,7 +85,7 @@ contract NFT_c is ERC721 , Ownable {
     function mintNFT( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
 
         // 가격
-        require( msg.value == 1 ether ) ;
+        require( msg.value == price ) ;
         // 이더말고 스테이블은 어떻게 받음??
         // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
         // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
