@@ -11,6 +11,7 @@ contract NFT_c is ERC721 , Ownable {
 
     bonus_token t_c ;
     uint public price ;
+    mapping( uint => uint ) proceeds ;
 
     constructor() ERC721("LIONTICKET", "LT") {
 
@@ -24,10 +25,11 @@ contract NFT_c is ERC721 , Ownable {
 
     }
 
-    function withdraw( uint _amount ) public onlyOwner { // 원하는 만큼만 출금
+    function withdraw( uint _day ) public onlyOwner { // 특정 경기의 수익금 출금
 
-        // todo_ 이미 지난 경기들의 가격만 출금가능. 안끝난 경기는 환불이슈 있음.
-        contract_owner.transfer( _amount ) ;
+        // 날짜가 지나야만 출금 가능
+        // 날짜 관련은 프론트에서 처리 ?
+        contract_owner.transfer( proceeds[ _day ] ) ;
 
     }
 
@@ -54,16 +56,17 @@ contract NFT_c is ERC721 , Ownable {
         // 사용되면 환불 불가
         require( chk_seat[ _tokenID ] == false ) ;
 
-        // 2. 질문2 오늘 날짜 vs _day ( 경기 이후 환불 불가 ) 
-
-        
+        // 날짜는 프론트에서 처리 ?
+        // 경기시작하면 환불 불가.
 
 
         // 사용 후에 보냄. 
         // 1번 경기의 좌석이 20개 , 맵핑으로 민팅할때 좌석값까지
         // chk_seat[ _day ][ _type ] = 0 ;
         _burn( _tokenID ) ;
-        payable( msg.sender ).transfer( price * 10 / 9 ) ;
+        uint _refund = price * 9 / 10 ;
+        proceeds[ _day ] -= _refund ;
+        payable( msg.sender ).transfer( _refund ) ;
         // 수수료 10%
          
     }
@@ -90,12 +93,13 @@ contract NFT_c is ERC721 , Ownable {
         // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
         // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
 
+        proceeds[ _day ] += price ;
         uint _tokenID = plus( _day , _type ) ;
         _safeMint( msg.sender , _tokenID ) ;
 
     }
 
-     function plus( uint _a, uint _b ) internal pure returns ( uint ) { // day + type : nft tokenID 생성
+     function plus( uint _a , uint _b ) internal pure returns ( uint ) { // day + type : nft tokenID 생성
 
         unchecked {
         uint temp = 10 ;
