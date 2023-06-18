@@ -6,20 +6,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./nft.sol" ;
 
-contract bonus_token is ERC20 , ERC20Burnable , Ownable {
+// chainlink vrf
+
+contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
 
     NFT_c nft_contract ;
     address n_c_a ;
      
     mapping( uint => uint ) R_BAL ; // 래플 밸런스
+//    mapping( uint => address[] ) R_add ; // n 번 래플에 참여한 지갑들
     mapping( uint => bool ) R_END ; // 래플 종료
     mapping( uint => address ) A_ADD ; // 옥션 최고 지값, 밸류
     mapping( uint => uint ) A_BAL ;
     mapping( uint => bool ) A_END ; // 옥션 종료
-    // 옥션 미구현
-
-    constructor () ERC20("AToken", "AT") {
-    }    
+    // 옥션 미구현  
 
     // OVERRIDE & REDEFINED FUNCTIONS
     function decimals() override public pure returns( uint8 ){
@@ -43,6 +43,7 @@ contract bonus_token is ERC20 , ERC20Burnable , Ownable {
         require( R_END[ _idx ] == false ) ;
 
         _transfer( _from , address( this ) , 1 ) ; // 토큰 1개 수거
+        // _transfer override
         R_BAL[ _idx ] ++ ;
 
     }
@@ -57,3 +58,12 @@ contract bonus_token is ERC20 , ERC20Burnable , Ownable {
     }
 
 }
+
+ function getRandomNumber(uint256 userProvidedSeed) public returns (bytes32 requestId) {
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
+        return requestRandomness(keyHash, fee, userProvidedSeed);
+    }
+    
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        randomResult = randomness;
+    }

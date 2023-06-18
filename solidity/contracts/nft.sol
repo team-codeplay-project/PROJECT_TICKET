@@ -5,24 +5,17 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./bonus_token.sol" ;
 
-contract NFT_c is ERC721 , Ownable {
+// 가스효율
+// 사이즈보다 퀼리티
 
-    address payable contract_owner ;
+contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
 
     bonus_token t_c ;
     uint public price ;
     mapping( uint => uint ) proceeds ;
 
-    constructor() ERC721("LIONTICKET", "LT") {
-
-        contract_owner = payable( msg.sender ) ;
-
-    }
-
     function set_t_c( bonus_token add ) public onlyOwner() {
-
         t_c = add ;
-
     }
 
     function withdraw( uint _day ) public onlyOwner { // 특정 경기의 수익금 출금
@@ -39,8 +32,6 @@ contract NFT_c is ERC721 , Ownable {
 
     }
 
-    // 필요 없을 수도 있다. 721 기본 코드에서 알아서 다 해줌.
-    // 사용 여부 구분할때는 필요할거같은디?
     // mapping( uint => mapping( uint => uint ) ) public chk_seat ;
     // chk[ 230604(날짜)1(프리미엄석)101(블럭)303(몇번째 ) ] = 0 : 발행x , 1 : 발행o , 2 : 사용됨
     mapping( uint => bool ) public chk_seat ; // true : 사용
@@ -57,6 +48,7 @@ contract NFT_c is ERC721 , Ownable {
         require( chk_seat[ _tokenID ] == false ) ;
 
         // 날짜는 프론트에서 처리 ?
+        // 인트 크기비교로
         // 경기시작하면 환불 불가.
 
 
@@ -104,7 +96,6 @@ contract NFT_c is ERC721 , Ownable {
         unchecked {
         uint temp = 10 ;
         while( _b >= temp ) {
-
             temp *= 10 ;
         }
 
