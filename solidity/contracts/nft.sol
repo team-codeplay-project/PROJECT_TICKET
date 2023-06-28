@@ -22,19 +22,48 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
 
         // 날짜가 지나야만 출금 가능
         // 날짜 관련은 프론트에서 처리 ?
-        contract_owner.transfer( proceeds[ _day ] ) ;
+        payable( owner() ).transfer( proceeds[ _day ] ) ;
 
     }
 
     function set_price( uint _price ) public onlyOwner { // 가격 정하기
-
         price = _price ;
-
     }
 
     // mapping( uint => mapping( uint => uint ) ) public chk_seat ;
     // chk[ 230604(날짜)1(프리미엄석)101(블럭)303(몇번째 ) ] = 0 : 발행x , 1 : 발행o , 2 : 사용됨
     mapping( uint => bool ) public chk_seat ; // true : 사용
+
+       function mintNFT( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
+
+        // 가격
+        require( msg.value == price ) ;
+        // 이더말고 스테이블은 어떻게 받음??
+        // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
+        // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
+
+        proceeds[ _day ] += price ;
+        uint _tokenID = plus( _day , _type ) ;
+        _safeMint( msg.sender , _tokenID ) ;
+
+    }
+
+    // 좌석이 이미 예약 되었는지 아닌지
+    function seat_info( uint _day , uint _block , uint _endidx ) public view returns( bool[] memory ){
+    
+        bool[] memory rt = new bool[]( _endidx ) ;
+        uint day = plus( _day , _block ) ;
+
+        for( uint i = 1 ; i <= _endidx ; i ++ ) {
+
+            uint tokenID = plus( day , i ) ;
+            rt[ i - 1 ] = _ownerOf( tokenID ) == address(0) ? false : true ;
+            
+        }
+
+        return rt ;
+
+    }
     
     function refund( uint _day , uint _type ) public { // 환불
   
@@ -70,28 +99,15 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
         require( chk_seat[ _tokenID ] == false ) ;
         require( msg.sender ==  _ownerOf( _tokenID ) ) ;
 
+        // 사용 체크
         chk_seat[ _tokenID ] = true ;
 
-        // todo : bonus_token 드랍
+        // 사용되면 토큰 지급
         t_c.t_mint( msg.sender ) ;
 
     }
 
-    function mintNFT( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
-
-        // 가격
-        require( msg.value == price ) ;
-        // 이더말고 스테이블은 어떻게 받음??
-        // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
-        // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
-
-        proceeds[ _day ] += price ;
-        uint _tokenID = plus( _day , _type ) ;
-        _safeMint( msg.sender , _tokenID ) ;
-
-    }
-
-     function plus( uint _a , uint _b ) internal pure returns ( uint ) { // day + type : nft tokenID 생성
+    function plus( uint _a , uint _b ) internal pure returns ( uint ) { // day + type : nft tokenID 생성
 
         unchecked {
         uint temp = 10 ;
