@@ -49,14 +49,15 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
     }
 
     // 좌석이 이미 예약 되었는지 아닌지
-    function seat_info( uint _day , uint _block , uint _endidx ) public view returns( bool[] memory ){
+    function seat_info( uint _day , uint _block , uint _endidx ) public view returns( bool[] memory rt ){
     
-        bool[] memory rt = new bool[]( _endidx ) ;
+        rt = new bool[]( _endidx ) ;
         uint day = plus( _day , _block ) ;
+        day = plus( day , 999 ) - 999 ;
 
         for( uint i = 1 ; i <= _endidx ; i ++ ) {
 
-            uint tokenID = plus( day , i ) ;
+            uint tokenID = day + i ;
             rt[ i - 1 ] = _ownerOf( tokenID ) == address(0) ? false : true ;
             
         }
