@@ -10,14 +10,6 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
 
     NFT_c nft_contract ;
     address n_c_a ;
-    mapping( address => bytes32 ) user_db ;
-
-    modifier chk_front( bytes32 _input ){ // 프론트에서 들어온거 체크
-
-        require( _input == user_db[ msg.sender ] ) ;
-        _ ;
-
-    } 
 
     // OVERRIDE & REDEFINED FUNCTIONS
     function decimals() override public pure returns( uint8 ){
@@ -36,10 +28,22 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
         _mint( _to , 1 ) ;
     }
 
-    event Raffle(uint indexed _idx , address indexed _add ) ;
+    event Raffle( uint indexed _idx , address indexed _add ) ;
 
     function Raffle_participate( uint _n ) public {
+
+        // 참여조건 토큰 1개 보유
+        // 토큰 1개 내야함
+  //      _burn( msg.sender , 1 ) ;
         emit Raffle( _n , msg.sender ) ;
+    }
+
+    function Raffle_end( uint _n ) public  onlyOwner() returns( uint ) {
+
+        uint r ;
+        // uint r = random( 1 ~ _n ) ;
+        return r ;
+
     }
 
 /*
@@ -48,13 +52,11 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
     struct Raffle {
 
         mapping( uint => bool ) chk ; // 이번 래플에 참가 했는지 아닌지
-        uint start_block ;
-        uint end_block ;
-        uint c ;
 
     }
 
     Raffle[] public R_db ;
+    
     //mapping( uint => mapping( uint => bool ) ) R_db ;
     uint R_num ;
 
@@ -65,7 +67,7 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
             //R_db[ l ].chk[ i ] = true ;
             //R_db[ l ][ i ] = true ; // 661248 , 574998 , 553934 // 641583 , 557898 , 536834
             R_db.push( ) ;
-            R_db[ i ].start_block = block.number ;
+         //   R_db[ i ].start_block = block.number ;
 
         }
 
@@ -75,7 +77,7 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
     function R_insert2() public { // 2705168 , 2352320 , 2331256 // 2705168 , 2352320 , 2331256
 
         for( uint i = 0 ; i < 1000 ; i ++ ) {
-        emit R( 1 , 0 , i ) ;
+        emit R( i , 0 , 0 ) ;
         }
 
     }
