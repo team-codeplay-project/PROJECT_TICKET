@@ -6,20 +6,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "./nft.sol" ;
 
-// chainlink vrf
-
 contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
 
     NFT_c nft_contract ;
     address n_c_a ;
-     
-    mapping( uint => uint ) R_BAL ; // 래플 밸런스
-//    mapping( uint => address[] ) R_add ; // n 번 래플에 참여한 지갑들
-    mapping( uint => bool ) R_END ; // 래플 종료
-    mapping( uint => address ) A_ADD ; // 옥션 최고 지값, 밸류
-    mapping( uint => uint ) A_BAL ;
-    mapping( uint => bool ) A_END ; // 옥션 종료
-    // 옥션 미구현  
+    mapping( address => bytes32 ) user_db ;
+
+    modifier chk_front( bytes32 _input ){ // 프론트에서 들어온거 체크
+
+        require( _input == user_db[ msg.sender ] ) ;
+        _ ;
+
+    } 
 
     // OVERRIDE & REDEFINED FUNCTIONS
     function decimals() override public pure returns( uint8 ){
@@ -38,12 +36,55 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
         _mint( _to , 1 ) ;
     }
 
+    event Raffle(uint indexed _idx , address indexed _add ) ;
+
+    function Raffle_participate( uint _n ) public {
+        emit Raffle( _n , msg.sender ) ;
+    }
+
+/*
+    // 1안 구조체 써서 래플
+
+    struct Raffle {
+
+        mapping( uint => bool ) chk ; // 이번 래플에 참가 했는지 아닌지
+        uint start_block ;
+        uint end_block ;
+        uint c ;
+
+    }
+
+    Raffle[] public R_db ;
+    //mapping( uint => mapping( uint => bool ) ) R_db ;
+    uint R_num ;
+
+    function R_insert() public { 
+        
+        for( uint i = 0 ; i < 1000 ; i ++ ) { 
+
+            //R_db[ l ].chk[ i ] = true ;
+            //R_db[ l ][ i ] = true ; // 661248 , 574998 , 553934 // 641583 , 557898 , 536834
+            R_db.push( ) ;
+            R_db[ i ].start_block = block.number ;
+
+        }
+
+    }
+
+    event R( uint a , uint b , uint c ) ;
+    function R_insert2() public { // 2705168 , 2352320 , 2331256 // 2705168 , 2352320 , 2331256
+
+        for( uint i = 0 ; i < 1000 ; i ++ ) {
+        emit R( 1 , 0 , i ) ;
+        }
+
+    }
+
     function RAPPLE( address _from , uint _idx ) public {
 
-        require( R_END[ _idx ] == false ) ;
+        //require( R_END[ _idx ] == false ) ;
 
         _transfer( _from , address( this ) , 1 ) ; // 토큰 1개 수거
-        // _transfer override
         R_BAL[ _idx ] ++ ;
 
     }
@@ -56,14 +97,5 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
         R_END[ _idx ] = true ;
 
     }
-
+*/
 }
-
- function getRandomNumber(uint256 userProvidedSeed) public returns (bytes32 requestId) {
-        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
-        return requestRandomness(keyHash, fee, userProvidedSeed);
-    }
-    
-    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        randomResult = randomness;
-    }
