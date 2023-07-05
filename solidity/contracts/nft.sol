@@ -5,12 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./bonus_token.sol" ;
 
-// 가스효율
-// 사이즈보다 퀼리티
-
 contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
 
-    bonus_token t_c ;
+    bonus_token private t_c ;
     uint public price ;
     mapping( uint => uint ) proceeds ;
 
@@ -52,8 +49,7 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
     function seat_info( uint _day , uint _block , uint _endidx ) public view returns( bool[] memory rt ){
     
         rt = new bool[]( _endidx ) ;
-        uint day = plus( _day , _block ) ;
-        day = plus( day , 999 ) - 999 ;
+        uint day = plus( _day , _block ) * 1000 ;
 
         for( uint i = 1 ; i <= _endidx ; i ++ ) {
 
