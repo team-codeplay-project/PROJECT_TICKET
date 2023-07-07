@@ -5,21 +5,49 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./bonus_token.sol" ;
 
+// 가스효율
+// 사이즈보다 퀼리티
+
 contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
 
+    address sub_owner ;
     bonus_token private t_c ;
+    bool private sub_chk ;
     uint public price ;
-    mapping( uint => uint ) proceeds ;
+    mapping( uint => address ) private buyer ; // 민팅한 사람
+    mapping( uint => bool ) private chk_seat ; // true : 사용 false : 비사용
+    mapping( uint => bool ) private chk_day ; // 특정 날짜 오픈
+    //  mapping( uint => uint ) proceeds ;
 
-    function set_t_c( bonus_token add ) public onlyOwner() {
+    constructor( address _sub ) {
+        sub_owner = _sub ;
+    }
+
+    modifier sub_true() {
+        require( sub_chk == true ) ;
+        _ ;
+    }
+
+    function sub_change( address _sub ) public onlyOwner sub_true{
+        sub_owner = _sub ;
+    }
+
+    function sub_agree( bool _tf ) public {
+        require( msg.sender == sub_owner ) ;
+        sub_chk = _tf ;
+    }
+
+    function set_t_c( bonus_token add ) public onlyOwner { // sub_true
         t_c = add ;
     }
 
-    function withdraw( uint _day ) public onlyOwner { // 특정 경기의 수익금 출금
+    function set_day( uint _day , bool _tf ) public onlyOwner { // sub_true
+        chk_day[ _day ] = _tf ;
+    }
 
-        // 날짜가 지나야만 출금 가능
-        // 날짜 관련은 프론트에서 처리 ?
-        payable( owner() ).transfer( proceeds[ _day ] ) ;
+    function withdraw( uint _amount) public onlyOwner { // sub_true // 특정 경기의 수익금 출금
+
+        payable( owner() ).transfer( _amount ) ;
 
     }
 
@@ -27,29 +55,25 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
         price = _price ;
     }
 
-    // mapping( uint => mapping( uint => uint ) ) public chk_seat ;
-    // chk[ 230604(날짜)1(프리미엄석)101(블럭)303(몇번째 ) ] = 0 : 발행x , 1 : 발행o , 2 : 사용됨
-    mapping( uint => bool ) public chk_seat ; // true : 사용
+    function buy_ticket( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
 
-       function mintNFT( uint _day , uint _type ) public payable { // 민팅 후 좌석 정보 변경 
-
-        // 가격
         require( msg.value == price ) ;
-        // 이더말고 스테이블은 어떻게 받음??
-        // 스테이블 받는건 그쪽 컨트렉트 받아서 하면되지않나.
-        // 구현해보고 싶으면 스테이블용도의 erc20 따로 발행해서 추후 확장
+        require( chk_day[ _day ] == true ) ;
 
-        proceeds[ _day ] += price ;
         uint _tokenID = plus( _day , _type ) ;
         _safeMint( msg.sender , _tokenID ) ;
+        buyer[ _tokenID ] = msg.sender ;
 
     }
 
     // 좌석이 이미 예약 되었는지 아닌지
     function seat_info( uint _day , uint _block , uint _endidx ) public view returns( bool[] memory rt ){
     
+        require( chk_day[ _day ] == true ) ;
+
         rt = new bool[]( _endidx ) ;
-        uint day = plus( _day , _block ) * 1000 ;
+        uint day = plus( _day , _block ) ;
+        day = plus( day , 999 ) - 999 ;
 
         for( uint i = 1 ; i <= _endidx ; i ++ ) {
 
@@ -63,43 +87,31 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
     }
     
     function refund( uint _day , uint _type ) public { // 환불
+
+        require( chk_day[ _day ] == true ) ;
   
         uint _tokenID = plus( _day , _type ) ;
-        address owner = ownerOf( _tokenID ) ;
 
-        // 주인 확인
-        require( owner == msg.sender ) ;
-
-        // 사용되면 환불 불가
+        require( msg.sender == buyer[ _tokenID ] ) ;
         require( chk_seat[ _tokenID ] == false ) ;
 
-        // 날짜는 프론트에서 처리 ?
-        // 인트 크기비교로
-        // 경기시작하면 환불 불가.
-
-
-        // 사용 후에 보냄. 
-        // 1번 경기의 좌석이 20개 , 맵핑으로 민팅할때 좌석값까지
-        // chk_seat[ _day ][ _type ] = 0 ;
         _burn( _tokenID ) ;
-        uint _refund = price * 9 / 10 ;
-        proceeds[ _day ] -= _refund ;
-        payable( msg.sender ).transfer( _refund ) ;
         // 수수료 10%
-         
+        uint _refund = price * 9 / 10 ;
+        payable( msg.sender ).transfer( _refund ) ;
+        
     }
 
-    function use( uint _day , uint _type ) public {
+    function use( uint _day , uint _type ) public { // 티켓 사용 조건 : 민팅한 사람
+
+        require( chk_day[ _day ] == true ) ;
 
         uint _tokenID = plus( _day , _type ) ;
         
         require( chk_seat[ _tokenID ] == false ) ;
-        require( msg.sender ==  _ownerOf( _tokenID ) ) ;
+        require( msg.sender == buyer[ _tokenID ] ) ;
 
-        // 사용 체크
         chk_seat[ _tokenID ] = true ;
-
-        // 사용되면 토큰 지급
         t_c.t_mint( msg.sender ) ;
 
     }
