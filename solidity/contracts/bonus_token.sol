@@ -16,15 +16,16 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
     }
 
     function set_n_c( address add ) public onlyOwner(){
-        nft_contract = NFT_c( n_c_a ) ;
+        nft_contract = NFT_c( add ) ;
     }
 
     function t_mint( address _to ) public { // 사용 확인되면 토큰 1개 지급
-        require( msg.sender == address( n_c_a ) ) ;
+        require( msg.sender == address( nft_contract ) ) ;
         _mint( _to , 1 ) ;
     }
 
     event Raffle( uint indexed _idx , address indexed _add ) ;
+    event Auction( uint indexed _idx , address indexed _add , uint _bid ) ;
 
     function Raffle_participate( uint _n ) public {
 
@@ -35,12 +36,18 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
         
     }
 
-    function Raffle_end( uint _n ) public  onlyOwner() returns( uint ) {
+    function Auction_participate( uint _n , uint _bid ) public {
 
-        uint r ;
-        // uint r = random( 1 ~ _n ) ;
+        // 참여조건 토큰 1개 보유
+        // 토큰 1개 내야함
+        // burn( msg.sender , 1 ) ;
+        emit Auction( _n , msg.sender , _bid ) ;
+        
+    }
+
+    function Raffle_end( uint _n ) public view onlyOwner() returns( uint ) {
+        uint r = uint( keccak256(abi.encodePacked(block.number , block.timestamp , _n , msg.sender )));
         return r ;
-
     }
 
 }
