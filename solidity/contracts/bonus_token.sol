@@ -45,8 +45,9 @@ contract bonus_token is ERC20("AToken", "AT") , ERC20Burnable , Ownable {
         
     }
 
-    function Raffle_end( uint _n ) public view onlyOwner() returns( uint ) {
-        uint r = uint( keccak256(abi.encodePacked(block.number , block.timestamp , _n , msg.sender )));
+    function Raffle_End( uint _n , uint num ) public view returns( uint ) {//onlyOwner() returns( uint ) {
+        uint r = uint( keccak256(abi.encodePacked(block.number , block.timestamp , _n , msg.sender ))) ;
+        r %= num ;
         return r ;
     }
 
