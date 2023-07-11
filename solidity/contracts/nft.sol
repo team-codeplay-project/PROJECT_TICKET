@@ -85,6 +85,11 @@ contract NFT_c is ERC721("LIONTICKET", "LT") , Ownable {
         return rt ;
 
     }
+
+    function Chk_seat( uint _day , uint _type ) public view returns( bool ){
+        uint tokenId = plus( _day , _type ) ;
+        return chk_seat[ tokenId ] ;
+    }
     
     function refund( uint _day , uint _type ) public { // 환불
 
